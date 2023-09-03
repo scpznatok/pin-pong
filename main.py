@@ -1,11 +1,19 @@
 from pygame import *
-
+from random import randint 
+from time import time as timer
+import pygame.time as ticks
+import pygame
 
 win_width = 1000
 win_height = 600
 display.set_caption("ping-pong")
 mw = display.set_mode((win_width, win_height))
 
+
+pygame.init()
+
+font.init()
+text_font1 = font.SysFont("Arial", 100)
 
 
 class GameSprite(sprite.Sprite):
@@ -36,23 +44,111 @@ class Player(GameSprite):
         elif keys[K_DOWN] and self.rect.y < 390 :
             self.rect.y +=self.speed
 
+
+class Ball(GameSprite):
+
+    def update(self):
+        self.rect.y += self.speed * self.direction1
+        self.rect.x += self.speed * self.direction
+
+        if self.rect.y <= 5 or self.rect.y >= 550:
+            self.direction1 = -self.direction1
+    def res(self):
+        self.direction1 = randint(1, 2)
+        self.direction = randint(1, 2)
+        if self.direction1 == 2:
+            self.direction1 = -1
+        if self.direction == 2:
+            self.direction = -1
+        print(self.direction, self.direction1)
+
+
+
+class Button():
+    def __init__(self, x, y, image, image_hover):
+        self.image_original = image
+        self.image_hover = image_hover
+        self.rect = self.image_original.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.clicked = False
+
+    def draw(self):
+        action = False
+        pos = pygame.mouse.get_pos()
+
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+                action = True
+                self.clicked = True
+            self.image = self.image_hover
+        else:
+            self.image = self.image_original
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        mw.blit(self.image, self.rect)
+
+        return action
+
+
+ball = Ball("images/ball.png", 5, 470, 260, 50 , 50)
 raketka_l = Player("images/raketka.png", 5, 10, 10, 25 , 200)
 raketka_r = Player("images/raketka.png", 5, 965, 10, 25 , 200)
+start_img = transform.scale(image.load("images/start_button.png"), (300, 85))
+start_img_hover = transform.scale(image.load("images/start_button_hover.png"), (300, 85))
 
-Game = True
+raket_group = sprite.Group()
+raket_group.add(raketka_l, raketka_r)
 
-while Game:
+
+start_button = Button(350, 300, start_img, start_img_hover)
+
+timer3 = text_font1.render("3", 1,(255,255,255),(0,0,0))
+timer2 = text_font1.render("2", 1,(255,255,255),(0,0,0))
+timer1 = text_font1.render("1", 1,(255,255,255),(0,0,0))
+timer0 = text_font1.render("1", 1,(0,0,0),(0,0,0))
+
+FPS = 60
+clock = pygame.time.Clock()
+Game = False
+start_game = True
+Menu = True
+Main = True
+
+while Main:
     for e in event.get():
-        if e.type == QUIT:
-            Game = False
-    mw.fill((0,0,0))
-    raketka_l.update_l()
-    raketka_l.reset()
-    raketka_r.update_r()
-    raketka_r.reset()
+            if e.type == QUIT:
+                Main = False
+    if Menu: # головне меню
+        mw.fill((0,0,0))
+        if start_button.draw(): # кнопка старт
+            Menu = False
+            Game = True
+            ball.res()
+            start_time = ticks.get_ticks()
     
-    
-    
-    
+    if Game:
+        mw.fill((0,0,0))
+        raketka_l.update_l()
+        raketka_l.reset()
+        raketka_r.update_r()
+        raketka_r.reset()
+        ball.reset()
+        if ticks.get_ticks() - start_time >= 1000 and ticks.get_ticks() - start_time <= 2000:
+            mw.blit(timer3, (465,50))
+        if ticks.get_ticks() - start_time >= 2000 and ticks.get_ticks() - start_time <= 3000:
+            mw.blit(timer2, (465,50))
+        if ticks.get_ticks() - start_time >= 3000 and ticks.get_ticks() - start_time <= 4000:
+            mw.blit(timer1, (465,50))
+        if ticks.get_ticks() - start_time >= 4000 and ticks.get_ticks() - start_time <= 4001:
+            mw.blit(timer0, (465,50))
+        if ticks.get_ticks() - start_time >= 4001 and ticks.get_ticks():
+            ball.update()
+        if sprite.spritecollide(ball, raket_group, False):
+            ball.direction = -ball.direction
+
+    clock.tick(FPS)
     display.update()
     time.delay(50)
