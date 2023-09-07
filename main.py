@@ -98,12 +98,20 @@ raketka_l = Player("images/raketka.png", 5, 10, 10, 25 , 200)
 raketka_r = Player("images/raketka.png", 5, 965, 10, 25 , 200)
 start_img = transform.scale(image.load("images/start_button.png"), (300, 85))
 start_img_hover = transform.scale(image.load("images/start_button_hover.png"), (300, 85))
+restart_img = transform.scale(image.load("images/restart_button.png"), (300, 85))
+restart_img_hover = transform.scale(image.load("images/restart_button_hover.png"), (300, 85))
+exit_img = transform.scale(image.load("images/exit_button.png"), (300, 85))
+exit_img_hover = transform.scale(image.load("images/exit_button_hover.png"), (300, 85))
+logo = transform.scale(image.load("images/logo.png"), (500, 500))
+lose_logo = transform.scale(image.load("images/lose.png"), (500, 500))
 
 raket_group = sprite.Group()
 raket_group.add(raketka_l, raketka_r)
 
 
 start_button = Button(350, 300, start_img, start_img_hover)
+restart_button = Button(350, 300, restart_img, restart_img_hover)
+exit_button = Button(350, 400, exit_img, exit_img_hover)
 
 timer3 = text_font1.render("3", 1,(255,255,255),(0,0,0))
 timer2 = text_font1.render("2", 1,(255,255,255),(0,0,0))
@@ -116,18 +124,22 @@ Game = False
 start_game = True
 Menu = True
 Main = True
+Lose = False
 
 while Main:
     for e in event.get():
             if e.type == QUIT:
                 Main = False
-    if Menu: # головне меню
+    if Menu:
         mw.fill((0,0,0))
-        if start_button.draw(): # кнопка старт
+        mw.blit(logo, (245,-70))
+        if start_button.draw():
             Menu = False
             Game = True
             ball.res()
             start_time = ticks.get_ticks()
+        if exit_button.draw():
+            Main = False
     
     if Game:
         mw.fill((0,0,0))
@@ -148,7 +160,23 @@ while Main:
             ball.update()
         if sprite.spritecollide(ball, raket_group, False):
             ball.direction = -ball.direction
-
+        print(ball.rect.x)
+        if ball.rect.x >= 950 or ball.rect.x <= 5:
+            Game = False
+            Lose = True
+    if Lose:
+        mw.fill((0,0,0))
+        mw.blit(lose_logo, (245,-70))
+        if restart_button.draw():
+            Menu = False
+            Lose = False
+            Game = True
+            ball.res()
+            ball.rect.x, ball.rect.y = 470, 260
+            raketka_l.rect.y , raketka_r.rect.x = 10,965
+            start_time = ticks.get_ticks()
+        if exit_button.draw():
+            Main = False
     clock.tick(FPS)
     display.update()
     time.delay(50)
